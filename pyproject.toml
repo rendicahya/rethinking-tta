@@ -20,3 +20,19 @@ metrics = [
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+# Pin torch/torchvision to the PyTorch CUDA 12.6 wheel index on Linux/Windows
+# (matches https://pytorch.org/get-started/locally/ --index-url .../whl/cu126).
+# Falls back to PyPI (CPU-only) on macOS, which has no CUDA wheels.
+torch = [
+    { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu126", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true

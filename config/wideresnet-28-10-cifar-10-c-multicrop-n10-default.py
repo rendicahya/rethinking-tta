@@ -1,10 +1,10 @@
 # Random-crop + flip TTA averaged over 10 views (10 forward passes).
 
 model = dict(
-    type="resnet50",
+    type="wideresnet2810",
     num_classes=10,
     pretrained_backbone=False,
-    checkpoint="checkpoints/resnet-50-cifar-10.pt",
+    checkpoint="checkpoints/wideresnet-28-10-cifar-10.pt",
 )
 
 data = dict(
@@ -13,6 +13,8 @@ data = dict(
     num_workers=4,
     corruptions="all",
     severities=[1, 2, 3, 4, 5],
+    mean=(0.0, 0.0, 0.0),
+    std=(1.0, 1.0, 1.0),
 )
 
 tta = dict(
@@ -23,5 +25,5 @@ tta = dict(
 
 output = dict(
     dir="results",
-    tag="resnet-50-cifar-10-c-multicrop-n10-default",
+    tag="wideresnet-28-10-cifar-10-c-multicrop-n10-default",
 )

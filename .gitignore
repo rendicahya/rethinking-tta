@@ -2,6 +2,12 @@
 data/*
 !data/*.py
 !data/*.sh
+!data/*.ps1
+
+# Downloaded model checkpoints under checkpoints/ (the download script stays tracked)
+checkpoints/*
+!checkpoints/*.sh
+!checkpoints/*.ps1
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

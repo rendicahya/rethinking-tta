@@ -10,11 +10,25 @@ from torchvision.datasets import CIFAR10
 from .cifar10c import CIFAR10C, CORRUPTIONS
 
 CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
-CIFAR10_STD = (0.2470, 0.2435, 0.2616)
+# Must match the normalization used to train checkpoints/resnet-50-cifar-10.pt
+# (edadaltocg/resnet50_cifar10), not just "a" commonly cited CIFAR-10 std.
+CIFAR10_STD = (0.2023, 0.1994, 0.2010)
 
 
 class CIFAR10DataModule(L.LightningDataModule):
-    def __init__(self, root: str = "data", batch_size: int = 128, num_workers: int = 4):
+    def __init__(
+        self,
+        root: str = "data",
+        batch_size: int = 128,
+        num_workers: int = 4,
+        mean: tuple[float, float, float] = CIFAR10_MEAN,
+        std: tuple[float, float, float] = CIFAR10_STD,
+    ):
+        """`mean`/`std` are passed through to `transforms.Normalize`. Different
+        checkpoints expect different normalization -- e.g. RobustBench's WRN-28-10
+        "Standard" checkpoint expects raw [0, 1] pixels, so its config passes
+        mean=(0, 0, 0), std=(1, 1, 1) (a no-op normalization).
+        """
         super().__init__()
         self.root = root
         self.batch_size = batch_size
@@ -25,13 +39,13 @@ class CIFAR10DataModule(L.LightningDataModule):
                 transforms.RandomCrop(32, padding=4),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+                transforms.Normalize(mean, std),
             ]
         )
         self.eval_transform = transforms.Compose(
             [
                 transforms.ToTensor(),
-                transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+                transforms.Normalize(mean, std),
             ]
         )
 

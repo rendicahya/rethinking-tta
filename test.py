@@ -65,11 +65,19 @@ def main() -> None:
     tta = build_tta(cfg.tta, model)
     flops = count_flops(model, input_size=(1, 3, 32, 32))
 
-    dm = CIFAR10DataModule(
+    dm_kwargs = dict(
         root=cfg.data.get("root", "data"),
         batch_size=cfg.data.get("batch_size", 128),
         num_workers=cfg.data.get("num_workers", 4),
     )
+    # Only override mean/std if the config sets them (e.g. WRN-28-10 configs use
+    # mean=(0,0,0), std=(1,1,1) to match RobustBench's un-normalized preprocessing).
+    if cfg.data.get("mean") is not None:
+        dm_kwargs["mean"] = cfg.data["mean"]
+    if cfg.data.get("std") is not None:
+        dm_kwargs["std"] = cfg.data["std"]
+
+    dm = CIFAR10DataModule(**dm_kwargs)
     dm.setup("validate")
 
     dataloaders, loader_meta = build_test_dataloaders(dm, cfg)
