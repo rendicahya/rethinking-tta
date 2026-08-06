@@ -19,7 +19,8 @@
 #   ./data/download.sh --force              # re-download even if files already exist
 #   ./data/download.sh --no-aria2-install    # don't try to auto-install aria2c
 #   ./data/download.sh --no-unzip-install    # don't try to auto-install unzip
-#   ./data/download.sh --cleanup             # delete the downloaded archive after extraction
+#   ./data/download.sh --cleanup             # delete downloaded archives (incl. leftovers from
+#                                             # earlier runs) once their dataset is extracted
 #
 # Already-downloaded/extracted datasets are skipped automatically (use --force to redo).
 
@@ -199,6 +200,7 @@ download_cifar10() {
 
   if [ -d "$out_dir/cifar-10-batches-py" ] && [ "$FORCE" = false ]; then
     echo "[CIFAR-10] Already present at $out_dir, skipping."
+    [ -f "$archive" ] && cleanup_archive "$archive" "CIFAR-10"
     return
   fi
 
@@ -229,6 +231,7 @@ download_cifar10_c() {
 
   if [ -f "$out_dir/labels.npy" ] && [ "$FORCE" = false ]; then
     echo "[CIFAR-10-C] Already present at $out_dir, skipping."
+    [ -f "$archive" ] && cleanup_archive "$archive" "CIFAR-10-C"
     return
   fi
 
@@ -265,6 +268,7 @@ download_tiny_imagenet() {
 
   if [ -d "$out_dir/tiny-imagenet-200/train" ] && [ "$FORCE" = false ]; then
     echo "[Tiny-ImageNet] Already present at $out_dir, skipping."
+    [ -f "$archive" ] && cleanup_archive "$archive" "Tiny-ImageNet"
     return
   fi
 
@@ -294,6 +298,7 @@ download_tiny_imagenet_c() {
 
   if [ -d "$out_dir" ] && [ "$(ls -A "$out_dir" 2>/dev/null)" ] && [ "$FORCE" = false ]; then
     echo "[Tiny-ImageNet-C] Already present at $out_dir, skipping."
+    [ -f "$archive" ] && cleanup_archive "$archive" "Tiny-ImageNet-C"
     return
   fi
 
