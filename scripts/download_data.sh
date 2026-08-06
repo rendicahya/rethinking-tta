@@ -19,6 +19,7 @@
 #   ./scripts/download_data.sh --skip-tiny-imagenet-c
 #   ./scripts/download_data.sh --force              # re-download even if files already exist
 #   ./scripts/download_data.sh --no-aria2-install    # don't try to auto-install aria2c
+#   ./scripts/download_data.sh --no-unzip-install    # don't try to auto-install unzip
 #   ./scripts/download_data.sh --cleanup             # delete the downloaded archive after extraction
 #
 # Already-downloaded/extracted datasets are skipped automatically (use --force to redo).
@@ -46,6 +47,7 @@ SKIP_TINY_IMAGENET=false
 SKIP_TINY_IMAGENET_C=false
 FORCE=false
 NO_ARIA2_INSTALL=false
+NO_UNZIP_INSTALL=false
 CLEANUP=false
 
 for arg in "$@"; do
@@ -56,6 +58,7 @@ for arg in "$@"; do
     --skip-tiny-imagenet-c) SKIP_TINY_IMAGENET_C=true ;;
     --force) FORCE=true ;;
     --no-aria2-install) NO_ARIA2_INSTALL=true ;;
+    --no-unzip-install) NO_UNZIP_INSTALL=true ;;
     --cleanup) CLEANUP=true ;;
     *) echo "Unknown argument: $arg" >&2; exit 1 ;;
   esac
@@ -94,6 +97,38 @@ ensure_aria2c() {
     echo "[setup] aria2c installed successfully."
   else
     echo "[setup] Could not install aria2c, falling back to curl (slower)." >&2
+  fi
+}
+
+ensure_unzip() {
+  if command -v unzip >/dev/null 2>&1; then
+    return
+  fi
+
+  if [ "$NO_UNZIP_INSTALL" = true ]; then
+    echo "[setup] unzip not found, skipping auto-install (--no-unzip-install). Falling back to Python's zipfile module."
+    return
+  fi
+
+  echo "[setup] unzip not found, attempting to install it ..."
+
+  if command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update -y && sudo apt-get install -y unzip
+  elif command -v brew >/dev/null 2>&1; then
+    brew install unzip
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf install -y unzip
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -Sy --noconfirm unzip
+  else
+    echo "[setup] No supported package manager found (apt/brew/dnf/pacman)." >&2
+    echo "[setup] Install unzip manually, or rely on the Python zipfile fallback." >&2
+  fi
+
+  if command -v unzip >/dev/null 2>&1; then
+    echo "[setup] unzip installed successfully."
+  else
+    echo "[setup] Could not install unzip, falling back to Python's zipfile module." >&2
   fi
 }
 
@@ -291,6 +326,7 @@ download_tiny_imagenet_c() {
 # --- main ------------------------------------------------------------------
 
 ensure_aria2c
+[ "$SKIP_TINY_IMAGENET" = false ] && ensure_unzip
 
 [ "$SKIP_CIFAR10" = false ] && download_cifar10
 [ "$SKIP_CIFAR10_C" = false ] && download_cifar10_c

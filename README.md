@@ -61,15 +61,18 @@ bash scripts/download_data.sh --skip-tiny-imagenet
 bash scripts/download_data.sh --skip-tiny-imagenet-c
 bash scripts/download_data.sh --force               # re-download even if files already exist
 bash scripts/download_data.sh --no-aria2-install     # don't try to auto-install aria2c
+bash scripts/download_data.sh --no-unzip-install     # don't try to auto-install unzip
 bash scripts/download_data.sh --cleanup              # delete the archive after extraction
 ```
 
 The script uses `aria2c` (multi-connection, much faster) if available, and
-tries to install it automatically via `apt`/`brew`/`dnf`/`pacman` if it isn't
-found — pass `--no-aria2-install` to skip that and fall back straight to
-`curl`. It also verifies each file's MD5 checksum, supports resuming if the
-connection drops mid-download, and automatically skips a dataset that's
-already been downloaded/extracted (pass `--force` to redo it anyway).
+`unzip` (for the Tiny-ImageNet zip archive), and tries to install whichever is
+missing automatically via `apt`/`brew`/`dnf`/`pacman` — pass
+`--no-aria2-install`/`--no-unzip-install` to skip that (falls back to `curl`
+and Python's `zipfile` module respectively). It also verifies each file's MD5
+checksum, supports resuming if the connection drops mid-download, and
+automatically skips a dataset that's already been downloaded/extracted (pass
+`--force` to redo it anyway).
 
 ## Project structure
 
