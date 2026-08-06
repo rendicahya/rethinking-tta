@@ -1,5 +1,5 @@
 """CIFAR-10-C dataset: reads the per-corruption .npy files produced by
-scripts/download_data.sh (Hendrycks & Dietterich, 2019)."""
+data/download.sh (Hendrycks & Dietterich, 2019)."""
 
 from __future__ import annotations
 

@@ -1,6 +1,7 @@
 # Downloaded datasets and archives under data/ (code files in data/ stay tracked)
 data/*
 !data/*.py
+!data/*.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

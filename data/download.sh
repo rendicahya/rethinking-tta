@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #
 # Download datasets for the cost-effectiveness study of TTA under distribution shift.
-# Faster alternative to download_data.py: uses aria2c (multi-connection) when available,
-# falling back to curl with resume support.
+# Uses aria2c (multi-connection) when available, falling back to curl with resume support.
 #
 # Datasets:
 # - CIFAR-10         : clean (in-distribution) data -> data/cifar10/
@@ -12,22 +11,21 @@
 #                      (smaller stand-in for full ImageNet-C, ~2.8GB vs ~62GB)
 #
 # Usage:
-#   ./scripts/download_data.sh              # download everything
-#   ./scripts/download_data.sh --skip-cifar10
-#   ./scripts/download_data.sh --skip-cifar10-c
-#   ./scripts/download_data.sh --skip-tiny-imagenet
-#   ./scripts/download_data.sh --skip-tiny-imagenet-c
-#   ./scripts/download_data.sh --force              # re-download even if files already exist
-#   ./scripts/download_data.sh --no-aria2-install    # don't try to auto-install aria2c
-#   ./scripts/download_data.sh --no-unzip-install    # don't try to auto-install unzip
-#   ./scripts/download_data.sh --cleanup             # delete the downloaded archive after extraction
+#   ./data/download.sh              # download everything
+#   ./data/download.sh --skip-cifar10
+#   ./data/download.sh --skip-cifar10-c
+#   ./data/download.sh --skip-tiny-imagenet
+#   ./data/download.sh --skip-tiny-imagenet-c
+#   ./data/download.sh --force              # re-download even if files already exist
+#   ./data/download.sh --no-aria2-install    # don't try to auto-install aria2c
+#   ./data/download.sh --no-unzip-install    # don't try to auto-install unzip
+#   ./data/download.sh --cleanup             # delete the downloaded archive after extraction
 #
 # Already-downloaded/extracted datasets are skipped automatically (use --force to redo).
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATA_DIR="$SCRIPT_DIR/../data"
+DATA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 CIFAR10_URL="https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
 CIFAR10_MD5="c58f30108f718f92721af3b95e74349a"

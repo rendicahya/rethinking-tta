@@ -49,20 +49,20 @@ Datasets used:
 Run:
 
 ```bash
-bash scripts/download_data.sh
+bash data/download.sh
 ```
 
 Available options:
 
 ```bash
-bash scripts/download_data.sh --skip-cifar10
-bash scripts/download_data.sh --skip-cifar10-c
-bash scripts/download_data.sh --skip-tiny-imagenet
-bash scripts/download_data.sh --skip-tiny-imagenet-c
-bash scripts/download_data.sh --force               # re-download even if files already exist
-bash scripts/download_data.sh --no-aria2-install     # don't try to auto-install aria2c
-bash scripts/download_data.sh --no-unzip-install     # don't try to auto-install unzip
-bash scripts/download_data.sh --cleanup              # delete the archive after extraction
+bash data/download.sh --skip-cifar10
+bash data/download.sh --skip-cifar10-c
+bash data/download.sh --skip-tiny-imagenet
+bash data/download.sh --skip-tiny-imagenet-c
+bash data/download.sh --force               # re-download even if files already exist
+bash data/download.sh --no-aria2-install     # don't try to auto-install aria2c
+bash data/download.sh --no-unzip-install     # don't try to auto-install unzip
+bash data/download.sh --cleanup              # delete the archive after extraction
 ```
 
 The script uses `aria2c` (multi-connection, much faster) if available, and
@@ -81,11 +81,11 @@ config/                    # experiment configs + loader
   config_loader.py            # loader for config/*.py files
   README.md                   # config naming scheme
   resnet-50-*.py               # experiment configs
-data/                       # dataset code + downloaded datasets
+data/                       # dataset code, download script, and downloaded datasets
+  download.sh                  # dataset download script: bash data/download.sh
   cifar10c.py                  # CIFAR-10-C dataset
   datamodule.py                # Lightning DataModule (CIFAR-10 + CIFAR-10-C)
   cifar10/, cifar10-c/, ...    # downloaded datasets (gitignored)
-scripts/                   # supporting scripts (dataset download, etc.)
 model.py                   # ResNet backbone
 tta.py                     # TTA methods (baseline, flip, multicrop, TENT) + registry
 metrics.py                 # cost metrics: latency, FLOPs, GPU memory, energy
@@ -94,7 +94,7 @@ test.py                    # evaluation entrypoint: uv run test.py config/xxx.py
 ```
 
 Only the downloaded dataset folders/archives inside `data/` are gitignored — code
-files (`data/*.py`) stay tracked.
+files (`data/*.py`, `data/*.sh`) stay tracked.
 
 ## Next steps
 
