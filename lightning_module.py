@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import lightning as L
 
-from .metrics.cost import GPUEnergyMeter, LatencyTimer, peak_gpu_memory_mb, reset_gpu_memory_stats
-from .tta.base import BaseTTA
+from metrics import GPUEnergyMeter, LatencyTimer, peak_gpu_memory_mb, reset_gpu_memory_stats
+from tta import BaseTTA
 
 
 class TTAModule(L.LightningModule):

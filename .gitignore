@@ -1,5 +1,6 @@
-# Project data (unduh via scripts/download_data.py)
-data/
+# Downloaded datasets and archives under data/ (code files in data/ stay tracked)
+data/*
+!data/*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

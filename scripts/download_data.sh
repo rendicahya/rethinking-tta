@@ -5,15 +5,23 @@
 # falling back to curl with resume support.
 #
 # Datasets:
-# - CIFAR-10   : clean (in-distribution) data -> data/cifar10/
-# - CIFAR-10-C : 15 corruption types x 5 severities (Hendrycks & Dietterich, 2019) -> data/cifar10-c/
+# - CIFAR-10         : clean (in-distribution) data -> data/cifar10/
+# - CIFAR-10-C       : 15 corruption types x 5 severities (Hendrycks & Dietterich, 2019) -> data/cifar10-c/
+# - Tiny-ImageNet    : clean (in-distribution) data, 64x64, 200 classes -> data/tiny-imagenet/
+# - Tiny-ImageNet-C  : 15 corruption types x 5 severities, 64x64 -> data/tiny-imagenet-c/
+#                      (smaller stand-in for full ImageNet-C, ~2.8GB vs ~62GB)
 #
 # Usage:
-#   ./scripts/download_data.sh              # download both
+#   ./scripts/download_data.sh              # download everything
 #   ./scripts/download_data.sh --skip-cifar10
 #   ./scripts/download_data.sh --skip-cifar10-c
+#   ./scripts/download_data.sh --skip-tiny-imagenet
+#   ./scripts/download_data.sh --skip-tiny-imagenet-c
 #   ./scripts/download_data.sh --force              # re-download even if files already exist
 #   ./scripts/download_data.sh --no-aria2-install    # don't try to auto-install aria2c
+#   ./scripts/download_data.sh --cleanup             # delete the downloaded archive after extraction
+#
+# Already-downloaded/extracted datasets are skipped automatically (use --force to redo).
 
 set -euo pipefail
 
@@ -26,17 +34,29 @@ CIFAR10_MD5="c58f30108f718f92721af3b95e74349a"
 CIFAR10_C_URL="https://zenodo.org/records/2535967/files/CIFAR-10-C.tar?download=1"
 CIFAR10_C_MD5="56bf5dcef84df0e2308c6dcbcbbd8499"
 
+TINY_IMAGENET_URL="https://zenodo.org/records/10720917/files/tiny-imagenet-200.zip?download=1"
+TINY_IMAGENET_MD5="90528d7ca1a48142e341f4ef8d21d0de"
+
+TINY_IMAGENET_C_URL="https://zenodo.org/records/2469796/files/TinyImageNet-C.tar?download=1"
+TINY_IMAGENET_C_MD5="3d9c6e89c2609aeb4198f84c8edd1ff0"
+
 SKIP_CIFAR10=false
 SKIP_CIFAR10_C=false
+SKIP_TINY_IMAGENET=false
+SKIP_TINY_IMAGENET_C=false
 FORCE=false
 NO_ARIA2_INSTALL=false
+CLEANUP=false
 
 for arg in "$@"; do
   case "$arg" in
     --skip-cifar10) SKIP_CIFAR10=true ;;
     --skip-cifar10-c) SKIP_CIFAR10_C=true ;;
+    --skip-tiny-imagenet) SKIP_TINY_IMAGENET=true ;;
+    --skip-tiny-imagenet-c) SKIP_TINY_IMAGENET_C=true ;;
     --force) FORCE=true ;;
     --no-aria2-install) NO_ARIA2_INSTALL=true ;;
+    --cleanup) CLEANUP=true ;;
     *) echo "Unknown argument: $arg" >&2; exit 1 ;;
   esac
 done
@@ -93,6 +113,33 @@ download() {
   fi
 }
 
+cleanup_archive() {
+  # cleanup_archive <archive_file> <label>
+  local archive="$1"
+  local label="$2"
+
+  if [ "$CLEANUP" = true ]; then
+    rm -f "$archive"
+    echo "[$label] Removed archive $archive (--cleanup)."
+  else
+    echo "[$label] Done. Archive kept at $archive (pass --cleanup to remove it after extraction)."
+  fi
+}
+
+extract_zip() {
+  # extract_zip <zip_file> <dest_dir>
+  local zip_file="$1"
+  local dest_dir="$2"
+  mkdir -p "$dest_dir"
+
+  if command -v unzip >/dev/null 2>&1; then
+    unzip -q -o "$zip_file" -d "$dest_dir"
+  else
+    echo "[extract_zip] unzip not found, falling back to Python's zipfile module."
+    python3 -c "import zipfile, sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$zip_file" "$dest_dir"
+  fi
+}
+
 check_md5() {
   # check_md5 <file> <expected_md5>
   local file="$1"
@@ -137,7 +184,8 @@ download_cifar10() {
   mkdir -p "$out_dir"
   echo "[CIFAR-10] Extracting to $out_dir ..."
   tar -xzf "$archive" -C "$out_dir"
-  echo "[CIFAR-10] Done."
+
+  cleanup_archive "$archive" "CIFAR-10"
 }
 
 # --- CIFAR-10-C ------------------------------------------------------------
@@ -173,7 +221,71 @@ download_cifar10_c() {
     rmdir "$DATA_DIR/CIFAR-10-C"
   fi
 
-  echo "[CIFAR-10-C] Done. Archive kept at $archive (delete manually to save space)."
+  cleanup_archive "$archive" "CIFAR-10-C"
+}
+
+# --- Tiny-ImageNet ---------------------------------------------------------
+
+download_tiny_imagenet() {
+  local out_dir="$DATA_DIR/tiny-imagenet"
+  local archive="$DATA_DIR/tiny-imagenet-200.zip"
+
+  if [ -d "$out_dir/tiny-imagenet-200/train" ] && [ "$FORCE" = false ]; then
+    echo "[Tiny-ImageNet] Already present at $out_dir, skipping."
+    return
+  fi
+
+  if [ ! -f "$archive" ] || [ "$FORCE" = true ]; then
+    echo "[Tiny-ImageNet] Downloading (~248 MB) ..."
+    download "$TINY_IMAGENET_URL" "$archive"
+  fi
+
+  echo "[Tiny-ImageNet] Verifying MD5 checksum ..."
+  if ! check_md5 "$archive" "$TINY_IMAGENET_MD5"; then
+    echo "[Tiny-ImageNet] ERROR: MD5 checksum mismatch. Delete $archive and re-run." >&2
+    exit 1
+  fi
+  echo "[Tiny-ImageNet] Checksum OK."
+
+  echo "[Tiny-ImageNet] Extracting to $out_dir ..."
+  extract_zip "$archive" "$out_dir"
+
+  cleanup_archive "$archive" "Tiny-ImageNet"
+}
+
+# --- Tiny-ImageNet-C ---------------------------------------------------------
+
+download_tiny_imagenet_c() {
+  local out_dir="$DATA_DIR/tiny-imagenet-c"
+  local archive="$DATA_DIR/TinyImageNet-C.tar"
+
+  if [ -d "$out_dir" ] && [ "$(ls -A "$out_dir" 2>/dev/null)" ] && [ "$FORCE" = false ]; then
+    echo "[Tiny-ImageNet-C] Already present at $out_dir, skipping."
+    return
+  fi
+
+  if [ ! -f "$archive" ] || [ "$FORCE" = true ]; then
+    echo "[Tiny-ImageNet-C] Downloading (~2.8 GB) ..."
+    download "$TINY_IMAGENET_C_URL" "$archive"
+  fi
+
+  echo "[Tiny-ImageNet-C] Verifying MD5 checksum ..."
+  if ! check_md5 "$archive" "$TINY_IMAGENET_C_MD5"; then
+    echo "[Tiny-ImageNet-C] ERROR: MD5 checksum mismatch. Delete $archive and re-run." >&2
+    exit 1
+  fi
+  echo "[Tiny-ImageNet-C] Checksum OK."
+
+  echo "[Tiny-ImageNet-C] Extracting to $out_dir ..."
+  mkdir -p "$out_dir"
+  # Extracted directly into out_dir (unlike CIFAR-10-C's archive, this one's exact
+  # top-level folder name inside the tar hasn't been confirmed) -- if the tar contains
+  # its own wrapper folder, contents will just end up one level deeper, e.g.
+  # out_dir/Tiny-ImageNet-C/<corruption>/<severity>/... instead of out_dir/<corruption>/...
+  # Check `ls "$out_dir"` after the first run and adjust cifar10c.py/datamodule.py if needed.
+  tar -xf "$archive" -C "$out_dir"
+
+  cleanup_archive "$archive" "Tiny-ImageNet-C"
 }
 
 # --- main ------------------------------------------------------------------
@@ -182,5 +294,7 @@ ensure_aria2c
 
 [ "$SKIP_CIFAR10" = false ] && download_cifar10
 [ "$SKIP_CIFAR10_C" = false ] && download_cifar10_c
+[ "$SKIP_TINY_IMAGENET" = false ] && download_tiny_imagenet
+[ "$SKIP_TINY_IMAGENET_C" = false ] && download_tiny_imagenet_c
 
 echo "All downloads finished."

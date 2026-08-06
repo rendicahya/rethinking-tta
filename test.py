@@ -16,12 +16,12 @@ from pathlib import Path
 
 import lightning as L
 
-from rtta.config import load_config
-from rtta.data.datamodule import CIFAR10DataModule
-from rtta.lightning_module import TTAModule
-from rtta.metrics.cost import count_flops
-from rtta.models.resnet import build_model
-from rtta.tta.registry import build_tta
+from config.config_loader import load_config
+from data.datamodule import CIFAR10DataModule
+from lightning_module import TTAModule
+from metrics import count_flops
+from model import build_model
+from tta import build_tta
 
 RESULT_FIELDS = [
     "corruption",
