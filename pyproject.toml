@@ -1,0 +1,22 @@
+[project]
+name = "rethinking-tta"
+version = "0.1.0"
+description = "Analisis Cost-Effectiveness Test-Time Augmentation pada Klasifikasi Citra di Bawah Distribution Shift"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "lightning>=2.2",
+]
+
+[project.optional-dependencies]
+# FLOPs counting (fvcore) and GPU energy sampling (pynvml) for cost-effectiveness metrics.
+# Install with: uv sync --extra metrics
+metrics = [
+    "fvcore>=0.1.5",
+    "pynvml>=11.5",
+]
+
+[tool.uv]
+package = false
